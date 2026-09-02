@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Home - E-Voting System{% endblock %}
+
+{% block content %}
+<div class="container home-container">
+    <div class="card home-card">
+        <div class="card-header">
+            <h1>Welcome to E-Voting System</h1>
+            <p>Secure, Transparent, and Efficient Electronic Voting</p>
+        </div>
+
+        <div class="home-content">
+            <div class="info-section">
+                <h2>About the System</h2>
+                <p>Our E-Voting System is designed to modernize the electoral process with advanced CNIC verification and facial biometrics. 
+                    Every voter's identity is verified through their national ID card and live face matching, ensuring that every vote counts 
+                    and preventing duplicate registrations. With AES-256 encryption and comprehensive security measures, we guarantee the 
+                    integrity and anonymity of your choice.</p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-box">
+                    <h3>Benefits</h3>
+                    <ul>
+                        <li><strong>Secure:</strong> CNIC verification with facial biometrics.</li>
+                        <li><strong>Fast:</strong> Cast your vote in seconds.</li>
+                        <li><strong>Transparent:</strong> Real-time results and audit trails.</li>
+                        <li><strong>Accessible:</strong> Vote from anywhere with ease.</li>
+                    </ul>
+                </div>
+
+                <div class="feature-box">
+                    <h3>Requirements</h3>
+                    <p>To participate, you will need:</p>
+                    <ul>
+                        <li>Valid <strong>CNIC</strong> Number.</li>
+                        <li><strong>CNIC Image</strong> (Clear photo of your CNIC card).</li>
+                        <li>Mobile Number for registration.</li>
+                        <li><strong>Age 18+</strong> (Verified from CNIC).</li>
+                        <li><strong>Face Verification</strong> (Camera required).</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="stats-section" id="liveStats">
+                <h2><i class="fas fa-chart-bar"></i> Live Results</h2>
+                <div class="stats-container-home" id="statsContainer">
+                    <div class="loading-stats">Loading live results...</div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <a href="{{ url_for('register') }}" target="_blank" class="btn btn-primary bounce-btn">
+                    <i class="fas fa-user-plus"></i> Register
+                </a>
+                <a href="{{ url_for('help_page') }}" target="_blank" class="btn btn-secondary bounce-btn">
+                    <i class="fas fa-question-circle"></i> Help/Support
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function updateStats() {
+        fetch('/api/public/stats')
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById('statsContainer');
+                if (data.success && data.candidates.length > 0) {
+                    let html = '';
+                    data.candidates.forEach(candidate => {
+                        // Safe image URL handling
+                        const imgSrc = candidate.photo_path ? `/uploads/${candidate.photo_path.split('/').pop()}` : '';
+                        const imgHtml = imgSrc ? `<img src="${imgSrc}" alt="${candidate.name}" class="popup-img">` : '<div class="popup-placeholder">👤</div>';
+
+                        html += `
+                            <div class="stat-row">
+                                <div class="stat-info">
+                                    <span class="stat-name">${candidate.name} (${candidate.party})</span>
+                                    <span class="stat-votes">${candidate.votes} votes (${candidate.percentage}%)</span>
+                                </div>
+                                <div class="stat-bar-bg">
+                                    <div class="stat-bar-fill" style="width: ${candidate.percentage}%"></div>
+                                </div>
+                                
+                                <!-- Popup -->
+                                <div class="stat-popup">
+                                    <div class="popup-content">
+                                        <div class="popup-header">
+                                            ${imgHtml}
+                                            <div class="popup-text">
+                                                <h4>${candidate.name}</h4>
+                                                <p class="popup-party">${candidate.party}</p>
+                                            </div>
+                                        </div>
+                                        <div class="popup-stats">
+                                            <div class="popup-stat-item">
+                                                <span class="popup-label">Votes</span>
+                                                <span class="popup-value">${candidate.votes}</span>
+                                            </div>
+                                            <div class="popup-stat-item">
+                                                <span class="popup-label">Share</span>
+                                                <span class="popup-value">${candidate.percentage}%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = '<div class="no-stats">No votes cast yet.</div>';
+                }
+            })
+            .catch(error => console.error('Error fetching stats:', error));
+    }
+
+    // Update every 5 seconds
+    setInterval(updateStats, 5000);
+    // Initial call
+    updateStats();
+</script>
+{% endblock %}

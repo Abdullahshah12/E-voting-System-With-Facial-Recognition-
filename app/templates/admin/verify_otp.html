@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Verify OTP - Admin Portal{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card admin-login-card">
+        <div class="card-header">
+            <h1>Two-Factor Authentication</h1>
+            <p>Please enter the OTP sent to your email</p>
+            {% if session.get('otp_code') %}
+            <div style="background: rgba(255,255,255,0.2); padding: 10px; margin-top: 15px; border-radius: 5px;">
+                <small>⚠️ Email failed. Check server console for OTP: <strong>{{ session.otp_code }}</strong></small>
+            </div>
+            {% endif %}
+        </div>
+        <form method="POST" action="{{ url_for('admin_verify_otp') }}" class="login-form">
+            <div class="form-group">
+                <label for="otp">OTP Code</label>
+                <input type="text" id="otp" name="otp" placeholder="000000" 
+                       pattern="[0-9]{6}" maxlength="6" required autofocus>
+                <small>Enter the 6-digit code sent to your email</small>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-block">Verify OTP</button>
+        </form>
+        <div class="login-footer">
+            <a href="{{ url_for('admin_login') }}">← Back to Login</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

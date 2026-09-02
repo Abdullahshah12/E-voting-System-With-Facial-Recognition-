@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Help & Support - E-Voting System{% endblock %}
+
+{% block content %}
+<div class="container help-container">
+    <div class="card help-card">
+        <div class="card-header">
+            <a href="{{ url_for('home') }}" class="back-button">
+                <i class="fas fa-arrow-left"></i> Back to Home
+            </a>
+            <h1>Help & Support</h1>
+            <p>We are here to assist you with the voting process.</p>
+        </div>
+
+        <div class="help-content">
+            <div class="help-intro">
+                <p>If you are facing any issues with registration, biometric verification, or casting your vote, please
+                    contact our support team below. We are available to guide you through every step.</p>
+            </div>
+
+            <div class="contact-grid">
+                <!-- Contact Block 1 -->
+                <div class="contact-card">
+                    <div class="contact-image">
+                        <img src="{{ url_for('static', filename='images/syed_abdullah.jpg') }}" alt="Syed Abdullah Shah"
+                            onerror="this.style.display='none'; this.parentElement.innerHTML='&lt;i class=&quot;fas fa-user-headset&quot;&gt;&lt;/i&gt;';">
+                    </div>
+                    <h3>Syed Abdullah Shah</h3>
+                    <p class="contact-role">Support Specialist</p>
+                    <a href="https://wa.me/923109951918" target="_blank" class="contact-link whatsapp">
+                        <i class="fab fa-whatsapp whatsapp-icon"></i>
+                        <span class="whatsapp-text">
+                            <span class="whatsapp-label">WhatsApp</span>
+                            <span class="whatsapp-number">0310-9951918</span>
+                        </span>
+                    </a>
+                </div>
+
+                <!-- Contact Block 2 -->
+                <div class="contact-card">
+                    <div class="contact-image">
+                        <img src="{{ url_for('static', filename='images/muhammad_yasir.jpg') }}"
+                            alt="Muhammad Yasir Khan"
+                            onerror="this.style.display='none'; this.parentElement.innerHTML='&lt;i class=&quot;fas fa-user-cog&quot;&gt;&lt;/i&gt;';">
+                    </div>
+                    <h3>Muhammad Yasir Khan</h3>
+                    <p class="contact-role">Technical Support</p>
+                    <a href="https://wa.me/923318165108" target="_blank" class="contact-link whatsapp">
+                        <i class="fab fa-whatsapp whatsapp-icon"></i>
+                        <span class="whatsapp-text">
+                            <span class="whatsapp-label">WhatsApp</span>
+                            <span class="whatsapp-number">0331-8165108</span>
+                        </span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

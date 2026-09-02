@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}Facial Verification - E-Voting System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card biometric-card">
+        <div class="card-header">
+            <h1>Facial Verification</h1>
+            <p>We will now compare your live face with the photo on your CNIC</p>
+        </div>
+
+        <div class="biometric-container">
+            <div class="camera-container">
+                <video id="video" autoplay playsinline></video>
+                <canvas id="canvas" style="display: none;"></canvas>
+                <div class="face-overlay" id="faceOverlay">
+                    <div class="face-guide"></div>
+                    <div class="scan-line"></div>
+                </div>
+            </div>
+
+            <div class="verification-status" id="status">
+                <div class="status-icon">📷</div>
+                <p>Position your face in the frame</p>
+                <p class="status-subtext">Make sure your face is clearly visible and well-lit</p>
+                <p class="status-subtext" style="margin-top: 10px; color: #0047AB; font-weight: 600;">
+                    ⚠️ Your face must match the photo on your CNIC card
+                </p>
+            </div>
+
+            <div class="biometric-actions">
+                <button id="verifyBtn" class="btn btn-primary">Verify & Continue</button>
+                <button id="retryBtn" class="btn btn-secondary" style="display: none;">Try Again</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let stream = null;
+    let verificationInProgress = false;
+
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const verifyBtn = document.getElementById('verifyBtn');
+    const retryBtn = document.getElementById('retryBtn');
+    const status = document.getElementById('status');
+
+    // Start camera
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 1280, height: 720 } })
+        .then(function (mediaStream) {
+            stream = mediaStream;
+            video.srcObject = stream;
+            
+            // Enable verify button when video is ready
+            video.addEventListener('loadeddata', function() {
+                verifyBtn.disabled = false;
+                status.innerHTML = '<div class="status-icon">📷</div><p>Ready to verify</p><p class="status-subtext">Click "Verify & Continue" when ready</p><p class="status-subtext" style="margin-top: 10px; color: #0047AB; font-weight: 600;">⚠️ Your face must match the photo on your CNIC card</p>';
+            });
+        })
+        .catch(function (err) {
+            status.innerHTML = '<div class="status-icon error">❌</div><p>Camera access denied</p><p class="status-subtext">Please allow camera access and refresh the page</p>';
+            verifyBtn.disabled = true;
+        });
+
+    // Verify button click handler
+    verifyBtn.addEventListener('click', function() {
+        if (verificationInProgress) return;
+        
+        attemptVerification();
+    });
+
+    function attemptVerification() {
+        verificationInProgress = true;
+        verifyBtn.disabled = true;
+
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0);
+
+        canvas.toBlob(function (blob) {
+            const formData = new FormData();
+            formData.append('image', blob, 'face.jpg');
+
+            status.innerHTML = '<div class="status-icon loading">⏳</div><p>Comparing your face with CNIC photo...</p><p class="status-subtext">Please wait...</p>';
+
+            fetch('{{ url_for("verify_face") }}', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(data => {
+                            throw new Error(data.message || 'Verification failed');
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        const confidenceText = data.confidence ? ` (${(data.confidence * 100).toFixed(1)}% match)` : '';
+                        status.innerHTML = '<div class="status-icon success">✅</div><p>Identity Verified Successfully!</p><p class="status-subtext">Your face matches the CNIC photo' + confidenceText + '</p><p class="status-subtext">Logging you in...</p>';
+                        // Stop camera
+                        if (stream) {
+                            stream.getTracks().forEach(track => track.stop());
+                        }
+                        setTimeout(function () {
+                            window.location.href = "{{ url_for('candidates') }}";
+                        }, 2000);
+                    } else {
+                        handleVerificationFailure(data.message);
+                    }
+                })
+                .catch(error => {
+                    handleVerificationFailure(error.message);
+                });
+        });
+    }
+
+    function handleVerificationFailure(message) {
+        verificationInProgress = false;
+        
+        // Check if it's a face detection issue
+        if (message.toLowerCase().includes('no face') || 
+            message.toLowerCase().includes('not detected') ||
+            message.toLowerCase().includes('not visible')) {
+            status.innerHTML = '<div class="status-icon warning">⚠️</div><p>Face not detected clearly</p><p class="status-subtext">Please ensure your face is visible, well-lit, and centered in the frame</p>';
+        } else if (message.toLowerCase().includes('blur') || 
+                   message.toLowerCase().includes('quality')) {
+            status.innerHTML = '<div class="status-icon warning">⚠️</div><p>Image quality too low</p><p class="status-subtext">Please ensure good lighting and hold still</p>';
+        } else if (message.toLowerCase().includes('match') || message.toLowerCase().includes('does not match')) {
+            status.innerHTML = '<div class="status-icon error">❌</div><p>Face Does Not Match CNIC</p><p class="status-subtext">Your live face does not match the photo on your CNIC card. Registration rejected.</p><p class="status-subtext" style="margin-top: 10px;">If this is an error, please ensure good lighting and try again.</p>';
+        } else if (message.toLowerCase().includes('already registered') || message.toLowerCase().includes('duplicate')) {
+            status.innerHTML = '<div class="status-icon error">❌</div><p>Duplicate Registration Detected</p><p class="status-subtext">' + message + '</p><p class="status-subtext" style="margin-top: 10px;">Each person can only register once.</p>';
+        } else {
+            status.innerHTML = '<div class="status-icon error">❌</div><p>' + message + '</p><p class="status-subtext">Please try again</p>';
+        }
+        
+        verifyBtn.style.display = 'none';
+        retryBtn.style.display = 'inline-block';
+    }
+
+    retryBtn.addEventListener('click', function () {
+        verificationInProgress = false;
+        status.innerHTML = '<div class="status-icon">📷</div><p>Position your face in the frame</p><p class="status-subtext">Make sure your face is clearly visible and well-lit</p><p class="status-subtext" style="margin-top: 10px; color: #0047AB; font-weight: 600;">⚠️ Your face must match the photo on your CNIC card</p>';
+        retryBtn.style.display = 'none';
+        verifyBtn.style.display = 'inline-block';
+        verifyBtn.disabled = false;
+    });
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', function () {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - E-Voting System{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    {% with active_page='dashboard' %}
+    {% include "admin/sidebar.html" %}
+    {% endwith %}
+
+    <div class="admin-content">
+        <div class="admin-page-header">
+            <h1>Dashboard</h1>
+            <p>E-Voting System with CNIC Verification</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-info">
+                    <h3>{{ stats.total_voters }}</h3>
+                    <p>Total Voters</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">🗳️</div>
+                <div class="stat-info">
+                    <h3>{{ stats.total_votes }}</h3>
+                    <p>Total Votes</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-info">
+                    <h3>{{ stats.voted_count }}</h3>
+                    <p>Voters Voted</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-info">
+                    <h3>{{ "%.1f"|format(stats.voting_percentage) }}%</h3>
+                    <p>Voting Percentage</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">🎯</div>
+                <div class="stat-info">
+                    <h3>{{ stats.total_candidates }}</h3>
+                    <p>Active Candidates</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">🔐</div>
+                <div class="stat-info">
+                    <h3>{{ stats.verified_voters }}</h3>
+                    <p>CNIC Verified</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">📸</div>
+                <div class="stat-info">
+                    <h3>{{ stats.biometric_verified }}</h3>
+                    <p>Face Verified</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">🎂</div>
+                <div class="stat-info">
+                    <h3>{{ stats.age_verified }}</h3>
+                    <p>Age 18+ Verified</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-card" style="margin-top: 30px;">
+            <h2>Security Features Active</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 20px;">
+                <div style="padding: 15px; background: #f0fdf4; border-left: 4px solid #10b981; border-radius: 8px;">
+                    <h3 style="color: #10b981; margin-bottom: 8px;">✓ CNIC Verification</h3>
+                    <p style="color: #64748b; font-size: 14px;">OCR-based CNIC number extraction and validation</p>
+                </div>
+                <div style="padding: 15px; background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 8px;">
+                    <h3 style="color: #3b82f6; margin-bottom: 8px;">✓ Age Validation</h3>
+                    <p style="color: #64748b; font-size: 14px;">Automatic age verification (18+ requirement)</p>
+                </div>
+                <div style="padding: 15px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 8px;">
+                    <h3 style="color: #f59e0b; margin-bottom: 8px;">✓ Facial Recognition</h3>
+                    <p style="color: #64748b; font-size: 14px;">CNIC face vs live face comparison</p>
+                </div>
+                <div style="padding: 15px; background: #fce7f3; border-left: 4px solid #ec4899; border-radius: 8px;">
+                    <h3 style="color: #ec4899; margin-bottom: 8px;">✓ Duplicate Prevention</h3>
+                    <p style="color: #64748b; font-size: 14px;">CNIC, phone, and face biometric checks</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-actions" style="margin-top: 30px;">
+            <a href="{{ url_for('admin_voters') }}" class="btn btn-primary">View Voters</a>
+            <a href="{{ url_for('admin_candidates') }}" class="btn btn-primary">Manage Candidates</a>
+            <a href="{{ url_for('admin_statistics') }}" class="btn btn-secondary">View Statistics</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

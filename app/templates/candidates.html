@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Select Candidate - E-Voting System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card candidates-card">
+        <div class="card-header">
+            <h1>Select Your Candidate</h1>
+            <p>Please select one candidate to cast your vote</p>
+        </div>
+
+        <div class="candidates-grid" id="candidatesGrid">
+            {% for candidate in candidates %}
+            <div class="candidate-card" data-candidate-id="{{ candidate.id }}">
+                <div class="candidate-photo">
+                    {% if candidate.photo_path %}
+                    <img src="{{ url_for('uploaded_file', filename=candidate.photo_path.split('/')[-1]) }}"
+                        alt="{{ candidate.name }}">
+                    {% else %}
+                    <div class="candidate-placeholder">👤</div>
+                    {% endif %}
+                </div>
+                <div class="candidate-info">
+                    <h3>{{ candidate.name }}</h3>
+                    {% if candidate.party %}
+                    <p class="candidate-party">{{ candidate.party }}</p>
+                    {% endif %}
+                    {% if candidate.description %}
+                    <p class="candidate-description">{{ candidate.description }}</p>
+                    {% endif %}
+                </div>
+                <div class="candidate-select">
+                    <button class="btn btn-primary btn-select">Select</button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="vote-confirmation" id="voteConfirmation" style="display: none;">
+            <div class="confirmation-content">
+                <h2>Confirm Your Vote</h2>
+                <div id="selectedCandidateInfo"></div>
+                <div class="confirmation-actions">
+                    <button id="confirmVoteBtn" class="btn btn-success">Confirm Vote</button>
+                    <button id="cancelVoteBtn" class="btn btn-secondary">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let selectedCandidateId = null;
+    const candidateCards = document.querySelectorAll('.candidate-card');
+    const voteConfirmation = document.getElementById('voteConfirmation');
+    const selectedCandidateInfo = document.getElementById('selectedCandidateInfo');
+    const confirmVoteBtn = document.getElementById('confirmVoteBtn');
+    const cancelVoteBtn = document.getElementById('cancelVoteBtn');
+
+    candidateCards.forEach(card => {
+        card.addEventListener('click', function () {
+            // Remove previous selection
+            candidateCards.forEach(c => c.classList.remove('selected'));
+
+            // Select this candidate
+            this.classList.add('selected');
+            selectedCandidateId = this.dataset.candidateId;
+
+            // Show confirmation
+            const candidateName = this.querySelector('h3').textContent;
+            const candidateParty = this.querySelector('.candidate-party')?.textContent || '';
+            selectedCandidateInfo.innerHTML = `
+                <p><strong>Candidate:</strong> ${candidateName}</p>
+                ${candidateParty ? `<p><strong>Party:</strong> ${candidateParty}</p>` : ''}
+                <p class="warning">⚠️ Once confirmed, you cannot change your vote!</p>
+            `;
+            voteConfirmation.style.display = 'block';
+            voteConfirmation.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+    });
+
+    confirmVoteBtn.addEventListener('click', function () {
+        // Double check selection
+        if (!selectedCandidateId) return;
+
+        // Disable button to prevent double voting
+        confirmVoteBtn.disabled = true;
+        confirmVoteBtn.textContent = 'Processing...';
+
+        // Construct payload
+        const payload = {
+            candidate_id: selectedCandidateId
+        };
+
+        fetch('{{ url_for("vote") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // If redirect URL is provided (which it should be), go there
+                    if (data.redirect) {
+                        window.location.href = data.redirect;
+                    } else {
+                        // Fallback
+                        window.location.href = "{{ url_for('vote_success') }}";
+                    }
+                } else {
+                    alert(data.message || 'Error casting vote. Please try again.');
+                    confirmVoteBtn.disabled = false;
+                    confirmVoteBtn.textContent = 'Confirm Vote';
+                }
+            })
+            .catch(error => {
+                alert('Error: ' + error.message);
+                confirmVoteBtn.disabled = false;
+                confirmVoteBtn.textContent = 'Confirm Vote';
+            });
+    });
+
+    cancelVoteBtn.addEventListener('click', function () {
+        voteConfirmation.style.display = 'none';
+        candidateCards.forEach(c => c.classList.remove('selected'));
+        selectedCandidateId = null;
+    });
+</script>
+{% endblock %}

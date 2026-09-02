@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Voters - Admin Portal{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    {% with active_page='voters' %}
+    {% include "admin/sidebar.html" %}
+    {% endwith %}
+
+    <div class="admin-content">
+        <div class="admin-page-header">
+            <h1>Registered Voters</h1>
+            <p>Total: {{ voters|length }} voters | CNIC Verified: {{ voters|selectattr('cnic_image_path')|list|length }} | Face Verified: {{ voters|selectattr('face_encoding')|list|length }}</p>
+        </div>
+
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Full Name</th>
+                        <th>CNIC</th>
+                        <th>Mobile</th>
+                        <th>Age</th>
+                        <th>CNIC Verified</th>
+                        <th>Face Verified</th>
+                        <th>Registered At</th>
+                        <th>Voting Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for voter in voters %}
+                    <tr>
+                        <td>{{ voter.id }}</td>
+                        <td>{{ voter.full_name }}</td>
+                        <td>{{ voter.cnic }}</td>
+                        <td>{{ voter.mobile }}</td>
+                        <td>
+                            {% if voter.date_of_birth %}
+                                {% set age = ((now - voter.date_of_birth).days / 365.25)|int %}
+                                {{ age }} years
+                            {% else %}
+                                <span style="color: #94a3b8;">N/A</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if voter.cnic_image_path %}
+                            <span class="badge badge-success">✓ Yes</span>
+                            {% else %}
+                            <span class="badge badge-warning">✗ No</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if voter.face_encoding %}
+                            <span class="badge badge-success">✓ Yes</span>
+                            {% else %}
+                            <span class="badge badge-warning">✗ No</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ voter.registered_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>
+                            {% if voter.has_voted %}
+                            <span class="badge badge-success">Voted</span>
+                            {% else %}
+                            <span class="badge badge-info">Not Voted</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="content-card" style="margin-top: 30px;">
+            <h3>Verification Statistics</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
+                <div style="padding: 12px; background: #f8fafc; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 24px; font-weight: 700; color: #2563eb;">{{ voters|selectattr('cnic_image_path')|list|length }}</div>
+                    <div style="font-size: 13px; color: #64748b; margin-top: 4px;">CNIC Uploaded</div>
+                </div>
+                <div style="padding: 12px; background: #f8fafc; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 24px; font-weight: 700; color: #10b981;">{{ voters|selectattr('face_encoding')|list|length }}</div>
+                    <div style="font-size: 13px; color: #64748b; margin-top: 4px;">Face Verified</div>
+                </div>
+                <div style="padding: 12px; background: #f8fafc; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 24px; font-weight: 700; color: #f59e0b;">{{ voters|selectattr('date_of_birth')|list|length }}</div>
+                    <div style="font-size: 13px; color: #64748b; margin-top: 4px;">Age Verified</div>
+                </div>
+                <div style="padding: 12px; background: #f8fafc; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 24px; font-weight: 700; color: #8b5cf6;">{{ voters|selectattr('has_voted')|list|length }}</div>
+                    <div style="font-size: 13px; color: #64748b; margin-top: 4px;">Already Voted</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

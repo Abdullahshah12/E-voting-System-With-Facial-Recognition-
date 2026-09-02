@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Login - E-Voting System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card admin-login-card">
+        <div class="card-header">
+            <h1>Admin Portal</h1>
+            <p>Please login to access the admin dashboard</p>
+        </div>
+        <form method="POST" action="{{ url_for('admin_login_post') }}" class="login-form">
+            <div class="form-group">
+                <label for="email">Username</label>
+                <input type="text" id="email" name="email" placeholder="admin" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Enter your password" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">Login</button>
+        </form>
+        <div class="login-footer">
+            <a href="{{ url_for('home') }}">← Back to Voter Portal</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

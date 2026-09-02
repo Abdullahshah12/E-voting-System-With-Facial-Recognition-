@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Voter Registration - E-Voting System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card register-card">
+        <div class="card-header">
+            <h1>Voter Registration</h1>
+            <p>Please enter your details and upload your CNIC to register</p>
+        </div>
+        <form method="POST" action="{{ url_for('register') }}" class="register-form" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="full_name">Full Name</label>
+                <input type="text" id="full_name" name="full_name" placeholder="Enter your full name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="cnic">CNIC Number</label>
+                <input type="text" id="cnic" name="cnic" placeholder="12345-1234567-1"
+                       pattern="[0-9]{5}-[0-9]{7}-[0-9]{1}" required>
+                <small>Format: 12345-1234567-1</small>
+            </div>
+
+            <div class="form-group">
+                <label for="mobile">Mobile Number</label>
+                <input type="tel" id="mobile" name="mobile" placeholder="03XX-XXXXXXX"
+                       pattern="[0-9]{4}-[0-9]{7}" required>
+                <small>Format: 03XX-XXXXXXX</small>
+            </div>
+
+            <div class="form-group">
+                <label for="cnic_image">CNIC Image Upload</label>
+                <input type="file" id="cnic_image" name="cnic_image" accept="image/*" required>
+                <small>Upload a clear image of your CNIC card (front side)</small>
+                <div id="cnic_preview" style="margin-top: 10px; display: none;">
+                    <img id="cnic_preview_img" style="max-width: 100%; max-height: 200px; border-radius: 8px; border: 2px solid #ddd;">
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-block" id="registerBtn">Register</button>
+        </form>
+    </div>
+</div>
+
+<script>
+// Preview CNIC image before upload
+document.getElementById('cnic_image').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            document.getElementById('cnic_preview').style.display = 'block';
+            document.getElementById('cnic_preview_img').src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+// Show loading state on form submit
+document.querySelector('.register-form').addEventListener('submit', function() {
+    const btn = document.getElementById('registerBtn');
+    btn.disabled = true;
+    btn.textContent = 'Processing CNIC...';
+});
+</script>
+{% endblock %}

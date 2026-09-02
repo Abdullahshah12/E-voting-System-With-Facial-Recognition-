@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Voting Statistics - Admin Portal{% endblock %}
+
+{% block extra_js %}
+<script>
+    function updateStatistics() {
+        fetch('{{ url_for("api_admin_statistics") }}')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.querySelector('.admin-page-header p').textContent = `Total Votes: ${data.total_votes}`;
+
+                    data.vote_stats.forEach(stat => {
+                        const item = document.querySelector(`.statistic-item[data-candidate-id="${stat.candidate_id}"]`);
+                        if (item) {
+                            const barFill = item.querySelector('.statistic-bar-fill');
+                            const votesText = item.querySelector('.stat-votes');
+                            const percentageText = item.querySelector('.stat-percentage');
+
+                            barFill.style.width = `${stat.percentage}%`;
+                            votesText.textContent = `${stat.vote_count} votes`;
+                            percentageText.textContent = `${stat.percentage.toFixed(1)}%`;
+                        }
+                    });
+                }
+            })
+            .catch(error => console.error('Error fetching statistics:', error));
+    }
+
+    // Update every 5 seconds
+    setInterval(updateStatistics, 5000);
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    {% with active_page='statistics' %}
+    {% include "admin/sidebar.html" %}
+    {% endwith %}
+
+    <div class="admin-content">
+        <div class="admin-page-header">
+            <h1>Voting Statistics</h1>
+            <p>Total Votes: {{ total_votes }}</p>
+        </div>
+
+        <div class="statistics-container">
+            {% for stat in vote_stats %}
+            <div class="statistic-item" data-candidate-id="{{ stat.candidate.id }}">
+                <div class="statistic-candidate">
+                    {% if stat.candidate.photo_path %}
+                    <img src="{{ url_for('uploaded_file', filename=stat.candidate.photo_path.split('/')[-1]) }}"
+                        alt="{{ stat.candidate.name }}" class="stat-candidate-photo">
+                    {% else %}
+                    <div class="stat-candidate-placeholder">👤</div>
+                    {% endif %}
+                    <div class="stat-candidate-info">
+                        <h3>{{ stat.candidate.name }}</h3>
+                        {% if stat.candidate.party %}
+                        <p>{{ stat.candidate.party }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="statistic-bar-container">
+                    <div class="statistic-bar">
+                        {% set width_val = "%.1f"|format((stat.vote_count / total_votes * 100) if total_votes > 0 else
+                        0) %}
+                        <div class="statistic-bar-fill" style="width: {{ width_val }}%;"></div>
+                    </div>
+                    <div class="statistic-numbers">
+                        <span class="stat-votes">{{ stat.vote_count }} votes</span>
+                        <span class="stat-percentage">{{ width_val }}%</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
